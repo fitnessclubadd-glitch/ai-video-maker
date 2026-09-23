@@ -38,6 +38,13 @@ jobs:
 
           echo "Android project: $PROJECT"
           echo "$PROJECT" > project_path.txt
+          - name: Enable AndroidX
+  shell: bash
+  run: |
+    PROJECT=$(cat project_path.txt)
+    touch "$PROJECT/gradle.properties"
+    echo "android.useAndroidX=true" >> "$PROJECT/gradle.properties"
+    echo "android.enableJetifier=true" >> "$PROJECT/gradle.properties"
 
       - name: Set up Java
         uses: actions/setup-java@v5
