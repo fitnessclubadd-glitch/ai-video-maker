@@ -1,0 +1,63 @@
+name: Build AI Video Maker APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download repository
+        uses: actions/checkout@v4
+
+      - name: Find and extract Android project
+        shell: bash
+        run: |
+          mkdir -p extracted
+          ZIP=$(find . -maxdepth 1 -type f -name "*.zip" | head -1)
+
+          if [ -z "$ZIP" ]; then
+            echo "ERROR: Android project ZIP not found."
+            exit 1
+          fi
+
+          echo "Found ZIP: $ZIP"
+          unzip -q "$ZIP" -d extracted
+
+          PROJECT=$(find extracted -name "settings.gradle" -o -name "settings.gradle.kts" | head -1 | xargs dirname)
+
+          if [ -z "$PROJECT" ]; then
+            echo "ERROR: Android project not found inside ZIP."
+            find extracted -maxdepth 3 -type f
+            exit 1
+          fi
+
+          echo "Android project: $PROJECT"
+          echo "$PROJECT" > project_path.txt
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: "8.9"
+
+      - name: Build APK
+        shell: bash
+        run: |
+          PROJECT=$(cat project_path.txt)
+          gradle -p "$PROJECT" assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-Video-Maker-APK
+          path: "**/app/build/outputs/apk/debug/app-debug.apk"
