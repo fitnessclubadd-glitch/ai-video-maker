@@ -38,6 +38,7 @@ jobs:
 
           echo "Android project: $PROJECT"
           echo "$PROJECT" > project_path.txt
+          
           - name: Enable AndroidX
   shell: bash
   run: |
